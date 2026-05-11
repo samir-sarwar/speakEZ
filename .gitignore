@@ -12,3 +12,4 @@ apps/api/speakez-api
 .cache
 SPEAKEZ_PLAN.md
 .local-maintenance.sh
+.vercel
