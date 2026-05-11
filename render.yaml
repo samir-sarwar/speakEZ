@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: speakez-api
+    runtime: go
+    repo: https://github.com/samir-sarwar/speakEZ
+    branch: main
+    rootDir: apps/api
+    buildCommand: go build -tags netgo -ldflags "-s -w" -o app ./cmd/server
+    startCommand: ./app
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: FRONTEND_URL
+        value: https://speakeazy.xyz
+      - key: OPENROUTER_MODEL
+        value: openai/gpt-4o-mini
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PRICE_ID
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false

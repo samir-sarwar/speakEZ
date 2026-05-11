@@ -25,7 +25,7 @@ func Load() Config {
 	loadDotEnv(".env")
 	loadDotEnv("apps/api/.env")
 	return Config{
-		Addr:                     env("ADDR", ":8080"),
+		Addr:                     listenAddr(),
 		FrontendURL:              env("FRONTEND_URL", "http://localhost:5173"),
 		SupabaseURL:              os.Getenv("SUPABASE_URL"),
 		SupabaseServiceKey:       os.Getenv("SUPABASE_SERVICE_ROLE_KEY"),
@@ -39,6 +39,16 @@ func Load() Config {
 		OpenRouterModel:          env("OPENROUTER_MODEL", "openai/gpt-4o-mini"),
 		TestPremiumEmails:        csvEnv("TEST_PREMIUM_EMAILS", "samirsarwaremail@gmail.com"),
 	}
+}
+
+func listenAddr() string {
+	if value := os.Getenv("ADDR"); value != "" {
+		return value
+	}
+	if value := os.Getenv("PORT"); value != "" {
+		return ":" + value
+	}
+	return ":8080"
 }
 
 func env(key string, fallback string) string {
