@@ -1,7 +1,8 @@
+import { useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Brain, Lock, MessageCircle, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import type { AiAnalysis, MeResponse } from "@speakez/shared";
+import type { MeResponse } from "@speakez/shared";
 import { api } from "../lib/api";
 import { buttonMotion, cardVariants, listItemVariants, listVariants, quickSpring } from "../lib/motion";
 import { ParrotCoach } from "./ParrotCoach";
@@ -20,8 +21,16 @@ export function AiPanel({ sessionId, me }: Props) {
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["me"] })
   });
-  const result = analysis.data as AiAnalysis | undefined;
+  const { data, error, isPending, mutate, reset } = analysis;
+  const previousSessionIdRef = useRef(sessionId);
+  const result = data?.sessionId === sessionId ? data : undefined;
   const canUseAi = me.profile.isPremium || me.usage.canUseAi;
+
+  useEffect(() => {
+    if (previousSessionIdRef.current === sessionId) return;
+    reset();
+    previousSessionIdRef.current = sessionId;
+  }, [reset, sessionId]);
 
   return (
     <motion.aside className="rounded-lg border-2 border-ink bg-white p-5 shadow-[8px_8px_0_#15131a]" variants={cardVariants}>
@@ -42,23 +51,23 @@ export function AiPanel({ sessionId, me }: Props) {
         <motion.div className="mt-5 space-y-4" variants={listVariants} initial="initial" animate="animate">
           <ParrotCoach
             compact
-            mood={analysis.isPending ? "thinking" : canUseAi ? "ready" : "sleepy"}
-            message={analysis.isPending ? "Reading the transcript for structure, clarity, and pace." : canUseAi ? "Save a take, then I can mark up what got stronger." : "Upgrade unlocks more coaching passes when you are ready."}
+            mood={isPending ? "thinking" : canUseAi ? "ready" : "sleepy"}
+            message={isPending ? "Reading the transcript for structure, clarity, and pace." : canUseAi ? "Save a take, then I can mark up what got stronger." : "Upgrade unlocks more coaching passes when you are ready."}
           />
           <motion.div className="rounded-lg bg-[#fffaf0] p-4" variants={listItemVariants}>
-          <p className="font-semibold leading-6 text-ink/70">
-            Get a gentle transcript-based scorecard for clarity, structure, pacing, confidence, and concision.
-          </p>
-          <motion.button
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-ink bg-mint px-4 py-3 font-black shadow-[4px_4px_0_#15131a] disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={!sessionId || !canUseAi || analysis.isPending}
-            onClick={() => analysis.mutate()}
-            {...buttonMotion}
-          >
-            <Sparkles size={18} />
-            {analysis.isPending ? "Analyzing..." : canUseAi ? "Analyze this take" : "Upgrade to analyze"}
-          </motion.button>
-          {analysis.error && <p className="mt-3 text-sm font-bold text-coral">{analysis.error.message}</p>}
+            <p className="font-semibold leading-6 text-ink/70">
+              Get a gentle transcript-based scorecard for clarity, structure, pacing, confidence, and concision.
+            </p>
+            <motion.button
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-ink bg-mint px-4 py-3 font-black shadow-[4px_4px_0_#15131a] disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!sessionId || !canUseAi || isPending}
+              onClick={() => mutate()}
+              {...buttonMotion}
+            >
+              <Sparkles size={18} />
+              {isPending ? "Analyzing..." : canUseAi ? "Analyze this take" : "Upgrade to analyze"}
+            </motion.button>
+            {error && <p className="mt-3 text-sm font-bold text-coral">{error.message}</p>}
           </motion.div>
         </motion.div>
       )}
